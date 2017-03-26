@@ -132,6 +132,17 @@
     else
       return 1;
   }
+
+  MapsLib.prototype.customMarkerCluster = function() {
+    var markers = locations.map(function(location)) {
+        return new google.maps.Marker({
+            position: location
+        })
+    }
+
+    var markerCluster = new MarkerClusterer(this.map, markers, '');
+  }
+
     //-----end of custom functions-----
 
     MapsLib.prototype.submitSearch = function (whereClause, map) {
