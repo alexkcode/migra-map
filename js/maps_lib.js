@@ -80,6 +80,8 @@
         var endDate = moment(); //now
 
         self.initializeDateSlider(minDate, maxDate, startDate, endDate, "days", 7);
+
+        self.customMarkerCluster = null;
         //-----end of custom initializers-----
 
         //run the default search when page loads
@@ -134,13 +136,22 @@
   }
 
   MapsLib.prototype.customMarkerCluster = function() {
-    var markers = locations.map(function(location)) {
+
+    var markers = searchrecords.map(function(location, n)) {
+
+        var markerIcon = new google.maps.MarkerImage(
+            scaledSize: new google.maps.Size(n, n)
+        );
+
         return new google.maps.Marker({
-            position: location
-        })
+            position: location,
+            icon: markerIcon
+        });
     }
 
-    var markerCluster = new MarkerClusterer(this.map, markers, '');
+    var options = {};
+
+    this.customMarkerCluster = new MarkerClusterer(this.map, markers, options);
   }
 
     //-----end of custom functions-----
@@ -228,6 +239,9 @@
         //-----custom filters-----
 		self.whereClause += "'Date' >= '" + $('#startDate').html() + "'";
 		self.whereClause += " AND 'Date' <= '" + $('#endDate').html() + "'";
+
+        // custom marker cluster
+        self.customMarkerCluster();
 
         // TODO : use 1, 0, -1
 	    if ( $("#rbType1").is(':checked')) {
