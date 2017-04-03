@@ -135,19 +135,32 @@
       return 1;
   }
 
-  MapsLib.prototype.customMarkerCluster = function() {
+  MapsLib.prototype.customMarkerClusterer = function() {
 
-    var markers = searchrecords.map(function(location, n)) {
+    if (this.map.data === null) {
+        console.log("no data to cluster!");
+        return;
+    }
 
-        var markerIcon = new google.maps.MarkerImage(
+    var layerMarkers = [];
+
+    // need to streamline this step
+    this.map.data.forEach(function(feature) {
+      layerMarkers.push(feature);
+    });
+
+    var markers = this.layerMarkers.map(function(location, n) {
+
+        var markerIcon = new google.maps.MarkerImage({
             scaledSize: new google.maps.Size(n, n)
-        );
+        });
 
         return new google.maps.Marker({
             position: location,
+            label: labels[n % labels.length],
             icon: markerIcon
         });
-    }
+    });
 
     var options = {};
 
@@ -241,7 +254,7 @@
 		self.whereClause += " AND 'Date' <= '" + $('#endDate').html() + "'";
 
         // custom marker cluster
-        self.customMarkerCluster();
+        self.customMarkerClusterer();
 
         // TODO : use 1, 0, -1
 	    if ( $("#rbType1").is(':checked')) {
