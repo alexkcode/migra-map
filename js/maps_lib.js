@@ -135,9 +135,12 @@
       return 1;
   }
 
-  MapsLib.prototype.customMarkerClusterer = function() {
+  MapsLib.prototype.customMarkerClusterer = function(map) {
 
-    if (this.map.data === null) {
+    console.log("start customMarkerClusterer method");
+    console.log(map.data);
+
+    if (map.data === null) {
         console.log("no data to cluster!");
         return;
     }
@@ -145,11 +148,13 @@
     var layerMarkers = [];
 
     // need to streamline this step
-    this.map.data.forEach(function(feature) {
+    map.data.forEach(function(feature) {
+      console.log("iterating on features");
+      console.log(feature.getGeometry().get());
       layerMarkers.push(feature);
     });
 
-    var markers = this.layerMarkers.map(function(location, n) {
+    var markers = layerMarkers.map(function(location, n) {
 
         var markerIcon = new google.maps.MarkerImage({
             scaledSize: new google.maps.Size(n, n)
@@ -164,7 +169,7 @@
 
     var options = {};
 
-    this.customMarkerCluster = new MarkerClusterer(this.map, markers, options);
+    this.customMarkerCluster = new MarkerClusterer(map, markers, options);
   }
 
     //-----end of custom functions-----
@@ -253,9 +258,6 @@
 		self.whereClause += "'Date' >= '" + $('#startDate').html() + "'";
 		self.whereClause += " AND 'Date' <= '" + $('#endDate').html() + "'";
 
-        // custom marker cluster
-        self.customMarkerClusterer();
-
         // TODO : use 1, 0, -1
 	    if ( $("#rbType1").is(':checked')) {
 	        self.whereClause += " AND Detentions='Yes'"
@@ -272,6 +274,9 @@
             self.whereClause += geoCondition;
             self.submitSearch(self.whereClause, self.map);
         });
+
+        // custom marker cluster
+        self.customMarkerClusterer(self.map);
     };
 
     MapsLib.prototype.reset = function () {
