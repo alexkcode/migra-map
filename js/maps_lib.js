@@ -72,7 +72,7 @@ e            center: this.map_centroid,
 
         //-----custom initializers-----
         // TODO : set dates here
-
+        
         //-----end of custom initializers-----
 
         //run the default search when page loads
@@ -202,26 +202,37 @@ e            center: this.map_centroid,
 				var address = $("#search_address").val();
 				self.searchRadius = $("#search_radius").val();
 				self.whereClause = ''; // init
-				//-----custom filters-----
+		//-----custom filters-----
 
+                //Start & End Date Search
 				// if startdate and enddate are not exposed, let startdate be one year ago and enddate today
 				var $dateRangePicker = $('input[name="daterange"]');
 				var startdate = $dateRangePicker.data('startdate');
 				var enddate = $dateRangePicker.data('enddate');
 
-				self.whereClause += "'Date' >= '" + startdate + "'";
-				self.whereClause += " AND 'Date' <= '" + enddate + "'";
+				self.whereClause += "'Raid Date' >= '" + startdate + "'";
+				self.whereClause += " AND 'Raid Date' <= '" + enddate + "'";
 
-				// TODO : use 1, 0, -1
+				//Detentions yes/no/unknown search
 				if ( $("#rbType1").is(':checked')) {
-						self.whereClause += " AND Detentions='Yes'"
+						self.whereClause += " AND Detentions='1'"
 				}
 				if ( $("#rbType2").is(':checked')) {
-						self.whereClause += " AND Detentions='No'"
+						self.whereClause += " AND Detentions='0'"
 				}
 				if ( $("#rbType3").is(':checked')) {
-						self.whereClause += " AND Detentions='Unknown/unsure'"
+						self.whereClause += " AND Detentions='-1'"
 				}
+
+                //Description Search 
+                var text_search = $("#text_search").val().replace("'", "\\'");
+                if (text_search != ''){
+                    self.whereClause += " AND 'Description' contains ignoring case '" + text_search + "'";
+                }
+
+                //TODO: Location Type Search
+
+                //TODO: Number of Detainees Radio Buttons
         //-----end of custom filters-----
 
         self.getgeoCondition(address, function (geoCondition) {
