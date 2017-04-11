@@ -72,7 +72,7 @@
 
         //-----custom initializers-----
         // TODO : set dates here
-
+        
         //-----end of custom initializers-----
 
         //run the default search when page loads
