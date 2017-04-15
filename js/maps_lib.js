@@ -86,8 +86,24 @@
     console.log("start customMarkerClusterer method");
 
     var self = this;
+
+    function clusterer(item, index) {
+
+        var markerIcon = new google.maps.MarkerImage({
+            scaledSize: new google.maps.Size(index, index)
+        });
+
+        return new google.maps.Marker({
+            url: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+            position: {lat: parseFloat(item[0].split(" ")[0]), lng: parseFloat(item[0].split(" ")[1])},
+            // label: labels[index % labels.length],
+            icon: markerIcon
+        });
+
+    }
     
     var layerMarkers = [];
+    var locations = [];
 
     self.query({
         select: "Location",
@@ -95,34 +111,16 @@
     }, function(json) {
       console.log("iterating on features");
       console.log(json.rows);
-      layerMarkers = json.rows;
+      locations = json.rows.slice();
+      layerMarkers = json.rows.map(clusterer);
     });
 
     console.log(layerMarkers);
-
-    // need to streamline this step
-    map.data.forEach(function(feature) {
-      console.log("iterating on features");
-      console.log(feature.getGeometry().get());
-      layerMarkers.push(feature);
-    });
-
-    var markers = layerMarkers.map(function(location, n) {
-
-        var markerIcon = new google.maps.MarkerImage({
-            scaledSize: new google.maps.Size(n, n)
-        });
-
-        return new google.maps.Marker({
-            position: location,
-            label: labels[n % labels.length],
-            icon: markerIcon
-        });
-    });
+    console.log(locations);
 
     var options = {};
 
-    this.customMarkerCluster = new MarkerClusterer(map, markers, options);
+    this.customMarkerCluster = new MarkerClusterer(map, layerMarkers, options);
   }
 
     //-----end of custom functions-----
