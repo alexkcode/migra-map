@@ -44,7 +44,7 @@
 
         this.myOptions = {
             zoom: this.defaultZoom,
-e            center: this.map_centroid,
+            center: this.map_centroid,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
         this.geocoder = new google.maps.Geocoder();
@@ -72,7 +72,7 @@ e            center: this.map_centroid,
 
         //-----custom initializers-----
         // TODO : set dates here
-        
+
         //-----end of custom initializers-----
 
         //run the default search when page loads
@@ -81,17 +81,24 @@ e            center: this.map_centroid,
     };
 
     //-----custom functions-----
-  MapsLib.prototype.customMarkerClusterer = function(map) {
+  MapsLib.prototype.customMarkerClusterer = function(whereClause, map) {
 
     console.log("start customMarkerClusterer method");
-    console.log(map.data);
 
-    if (map.data === null) {
-        console.log("no data to cluster!");
-        return;
-    }
-
+    var self = this;
+    
     var layerMarkers = [];
+
+    self.query({
+        select: "Location",
+        where: whereClause
+    }, function(json) {
+      console.log("iterating on features");
+      console.log(json.rows);
+      layerMarkers = json.rows;
+    });
+
+    console.log(layerMarkers);
 
     // need to streamline this step
     map.data.forEach(function(feature) {
@@ -224,15 +231,15 @@ e            center: this.map_centroid,
 						self.whereClause += " AND Detentions='-1'"
 				}
 
-                //Description Search 
-                var text_search = $("#text_search").val().replace("'", "\\'");
-                if (text_search != ''){
-                    self.whereClause += " AND 'Description' contains ignoring case '" + text_search + "'";
-                }
+        //Description Search 
+        var text_search = $("#text_search").val().replace("'", "\\'");
+        if (text_search != ''){
+            self.whereClause += " AND 'Description' contains ignoring case '" + text_search + "'";
+        }
 
-                //TODO: Location Type Search
+        //TODO: Location Type Search
 
-                //TODO: Number of Detainees Radio Buttons
+        //TODO: Number of Detainees Radio Buttons
         //-----end of custom filters-----
 
         self.getgeoCondition(address, function (geoCondition) {
@@ -241,7 +248,7 @@ e            center: this.map_centroid,
         });
 
         // custom marker cluster
-        self.customMarkerClusterer(self.map);
+        self.customMarkerClusterer(self.whereClause, self.map);
     };
 
     MapsLib.prototype.reset = function () {
