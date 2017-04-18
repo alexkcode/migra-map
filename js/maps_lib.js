@@ -72,7 +72,7 @@
 
         //-----custom initializers-----
         // TODO : set dates here
-
+        self.customMarkerCluster = null;
         //-----end of custom initializers-----
 
         //run the default search when page loads
@@ -89,13 +89,16 @@
 
     function clusterer(item, index) {
 
-        var markerIcon = new google.maps.MarkerImage({
-            scaledSize: new google.maps.Size(index, index)
-        });
+        var markerIcon = {
+            url: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+            scaledSize: new google.maps.Size(parseFloat(index), parseFloat(index))
+        };
+
+        // console.log(parseFloat(item[0].split(" ")[0]));
 
         return new google.maps.Marker({
-            url: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
-            position: {lat: parseFloat(item[0].split(" ")[0]), lng: parseFloat(item[0].split(" ")[1])},
+            position: {lat: parseFloat(item[0].split(" ")[0]), 
+                       lng: parseFloat(item[0].split(" ")[1])},
             // label: labels[index % labels.length],
             icon: markerIcon
         });
@@ -110,8 +113,8 @@
         where: whereClause
     }, function(json) {
       console.log("iterating on features");
-      console.log(json.rows);
-      locations = json.rows.slice();
+      // console.log(json.rows);
+      locations = json.rows;
       layerMarkers = json.rows.map(clusterer);
     });
 
@@ -120,7 +123,7 @@
 
     var options = {};
 
-    this.customMarkerCluster = new MarkerClusterer(map, layerMarkers, options);
+    self.customMarkerCluster = new MarkerClusterer(map, layerMarkers, options);
   }
 
     //-----end of custom functions-----
