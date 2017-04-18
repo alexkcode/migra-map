@@ -1,91 +1,95 @@
 (function (window, undefined) {
-    var MapsLib = function (options) {
-        var self = this;
 
-        options = options || {};
+  var MapsLib = function (options) {
+      var self = this;
 
-        this.recordName = options.recordName || "result"; //for showing a count of results
-        this.recordNamePlural = options.recordNamePlural || "results";
-        this.searchRadius = options.searchRadius || 805; //in meters ~ 1/2 mile
+      options = options || {};
 
-        // the encrypted Table ID of your Fusion Table (found under File => About)
-        this.fusionTableId = options.fusionTableId || "",
+      this.recordName = options.recordName || "result"; //for showing a count of results
+      this.recordNamePlural = options.recordNamePlural || "results";
+      this.searchRadius = options.searchRadius || 805; //in meters ~ 1/2 mile
 
-        // Found at https://console.developers.google.com/
-        // Important! this key is for demonstration purposes. please register your own.
-        this.googleApiKey = options.googleApiKey || "",
+      // the encrypted Table ID of your Fusion Table (found under File => About)
+      this.fusionTableId = options.fusionTableId || "",
 
-        // name of the location column in your Fusion Table.
-        // NOTE: if your location column name has spaces in it, surround it with single quotes
-        // example: locationColumn:     "'my location'",
-        //this.locationColumn = options.locationColumn || "location";
+      // Found at https://console.developers.google.com/
+      // Important! this key is for demonstration purposes. please register your own.
+      this.googleApiKey = options.googleApiKey || "",
 
-        // appends to all address searches if not present
-        this.locationScope = options.locationScope || "";
+      // name of the location column in your Fusion Table.
+      // NOTE: if your location column name has spaces in it, surround it with single quotes
+      // example: locationColumn:     "'my location'",
+      //this.locationColumn = options.locationColumn || "location";
 
-        // zoom level when map is loaded (bigger is more zoomed in)
-        this.defaultZoom = options.defaultZoom || 4;
+      // appends to all address searches if not present
+      this.locationScope = options.locationScope || "";
 
-        // center that your map defaults to
-        this.map_centroid = new google.maps.LatLng(options.map_center[0], options.map_center[1]);
+      // zoom level when map is loaded (bigger is more zoomed in)
+      this.defaultZoom = options.defaultZoom || 4;
 
-        // marker image for your searched address
-        if (typeof options.addrMarkerImage !== 'undefined') {
-            if (options.addrMarkerImage != "")
-                this.addrMarkerImage = options.addrMarkerImage;
-            else
-                this.addrMarkerImage = ""
-        }
-        else
-            this.addrMarkerImage = "images/blue-pushpin.png"
+      // center that your map defaults to
+      this.map_centroid = new google.maps.LatLng(options.map_center[0], options.map_center[1]);
 
-    	this.currentPinpoint = null;
-    	$("#result_count").html("");
+      // marker image for your searched address
+      if (typeof options.addrMarkerImage !== 'undefined') {
+          if (options.addrMarkerImage != "")
+              this.addrMarkerImage = options.addrMarkerImage;
+          else
+              this.addrMarkerImage = ""
+      }
+      else
+          this.addrMarkerImage = "images/blue-pushpin.png"
 
-        this.myOptions = {
-            zoom: this.defaultZoom,
-            center: this.map_centroid,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        this.geocoder = new google.maps.Geocoder();
-        this.map = new google.maps.Map($("#map_canvas")[0], this.myOptions);
+  	this.currentPinpoint = null;
+  	$("#result_count").html("");
 
-        // maintains map centerpoint for responsive design
-        google.maps.event.addDomListener(self.map, 'idle', function () {
-            self.calculateCenter();
-        });
-        google.maps.event.addDomListener(window, 'resize', function () {
-            self.map.setCenter(self.map_centroid);
-        });
-        self.searchrecords = null;
+      this.myOptions = {
+          zoom: this.defaultZoom,
+          center: this.map_centroid,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+      this.geocoder = new google.maps.Geocoder();
+      this.map = new google.maps.Map($("#map_canvas")[0], this.myOptions);
 
-        //reset filters
-        $("#search_address").val(self.convertToPlainString($.address.parameter('address')));
-        var loadRadius = self.convertToPlainString($.address.parameter('radius'));
-        if (loadRadius != "")
-            $("#search_radius").val(loadRadius);
-        else
-            $("#search_radius").val(self.searchRadius);
+      // maintains map centerpoint for responsive design
+      google.maps.event.addDomListener(self.map, 'idle', function () {
+          self.calculateCenter();
+      });
+      google.maps.event.addDomListener(window, 'resize', function () {
+          self.map.setCenter(self.map_centroid);
+      });
+      self.searchrecords = null;
 
-        $(":checkbox").prop("checked", "checked");
-        $("#result_box").hide();
+      //reset filters
+      $("#search_address").val(self.convertToPlainString($.address.parameter('address')));
+      var loadRadius = self.convertToPlainString($.address.parameter('radius'));
+      if (loadRadius != "")
+          $("#search_radius").val(loadRadius);
+      else
+          $("#search_radius").val(self.searchRadius);
 
-        //-----custom initializers-----
-        // TODO : set dates here
-        self.customMarkerCluster = null;
-        //-----end of custom initializers-----
+      $(":checkbox").prop("checked", "checked");
+      $("#result_box").hide();
 
-        //run the default search when page loads
-        self.doSearch();
-        if (options.callback) options.callback(self);
-    };
+      //-----custom initializers-----
+      // TODO : set dates here
+      //-----end of custom initializers-----
 
-    //-----custom functions-----
+      //run the default search when page loads
+      self.doSearch();
+      if (options.callback) options.callback(self);
+  };
+
+  //-----custom functions-----
   MapsLib.prototype.customMarkerClusterer = function(whereClause, map) {
 
     console.log("start customMarkerClusterer method");
 
     var self = this;
+    
+    var layerMarkers = [];
+    var locations = [];
+    var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     function clusterer(item, index) {
 
@@ -94,37 +98,41 @@
             scaledSize: new google.maps.Size(parseFloat(index), parseFloat(index))
         };
 
-        // console.log(parseFloat(item[0].split(" ")[0]));
+        // console.log(parseFloat(item[0].split(" ")[1]));
 
-        return new google.maps.Marker({
+        var returnMarker = new google.maps.Marker({
             position: {lat: parseFloat(item[0].split(" ")[0]), 
                        lng: parseFloat(item[0].split(" ")[1])},
-            // label: labels[index % labels.length],
-            icon: markerIcon
+            label: labels[index % labels.length]
+            // icon: markerIcon
         });
 
+        // console.log(returnMarker.getPosition().toString());
+        // console.log(returnMarker.getLabel());
+
+        layerMarkers.push(returnMarker);
     }
-    
-    var layerMarkers = [];
-    var locations = [];
 
     self.query({
         select: "Location",
         where: whereClause
     }, function(json) {
       console.log("iterating on features");
-      // console.log(json.rows);
-      locations = json.rows;
-      layerMarkers = json.rows.map(clusterer);
+      if ("undefined" !== typeof json.rows){
+        json.rows.map(function(item, index) {
+          locations.push(item[0]);
+        });
+        json.rows.map(clusterer);
+      }
     });
 
-    console.log(layerMarkers);
     console.log(locations);
+    console.log(layerMarkers);
 
-    var options = {};
+    var options = {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'};
 
-    self.customMarkerCluster = new MarkerClusterer(map, layerMarkers, options);
-  }
+    var customCluster = new MarkerClusterer(map, layerMarkers, options);
+  };
 
     //-----end of custom functions-----
 
